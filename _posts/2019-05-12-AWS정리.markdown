@@ -1,0 +1,46 @@
+# AWS
+
+___
+
+AWS 수업내용
+
+1 AWS 가입
+2 AWS 환경설정
+3 AWS에 우분투 설치
+
+AWS 우분투상에서 wit-backend를 설치하기 위해 git clone해야함
+
+git clone을 위해 ssh접속이 필요해짐
+
+ssh키를 우분투상에서 생성
+
+PUB키를 github에 등록시켜서 접속할때 나를 authenticate가능하도록 해줌
+
+그후 ssh방식을 통해 git clone을 실행하니 clone 성공
+
+zsh에 mysql 패스설정
+echo 'export PATH="/usr/local/opt/mysql@5.7/bin:$PATH"' >> ~/.zshrc
+
+
+SSH 접속
+
+ssh 키 생성해서 접속해야함
+
+PUB키는 클라이언트에 주고
+PRIVATE키는 내가 저장해놔야함
+
+그래서 어제 2개의 SSH키를 생성했음
+
+1쌍은 우분투 상에 사용하기 위해
+1쌍은 나의 로컬에서 사용하기 위해
+
+나의 로컬에서 생성한 ssh키는 내가 로컬에서 나의 계정으로 된 레파지토리들에 접속하여 작업할때 사용됨
+우분투상에서 생성한 ssh키는 우분투 상에서 깃클론받고 깃 작업을 할때 사용됨
+
+HTTPS와 HTTP?
+
+
+
+AWS에서 PEM키 발급해줌
+
+chmod 400을 실행해서 파일 권한을 바꿔줌
