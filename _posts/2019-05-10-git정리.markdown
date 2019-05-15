@@ -1,3 +1,22 @@
 # git정리
 
 ___
+
+- 전역 사용자명 입력
+git config --global user.name “Your name”
+
+- 전역 이메일 입력
+git config --global user.email “Your email address”
+
+- 저장소별 사용자명(해당 저장소 디렉터리로 이동후)
+git config user.name “Your name”
+
+- 저장소별 이메일 입력(해당 저장소 디렉터리로 이동후)
+git config user.name “Your name”
+
+- 현재 브랜치에서 새로운 브랜치 생성 + 체크아웃 동시에 하기
+git checkout -b [새로운 브랜치]
+
+
+git fetch
+git stash

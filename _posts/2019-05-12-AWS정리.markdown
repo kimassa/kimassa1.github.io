@@ -4,9 +4,9 @@ ___
 
 AWS 수업내용
 
-1 AWS 가입
-2 AWS 환경설정
-3 AWS에 우분투 설치
+- AWS 가입
+- AWS 환경설정
+- AWS에 우분투 설치
 
 AWS 우분투상에서 wit-backend를 설치하기 위해 git clone해야함
 
@@ -38,8 +38,6 @@ PRIVATE키는 내가 저장해놔야함
 우분투상에서 생성한 ssh키는 우분투 상에서 깃클론받고 깃 작업을 할때 사용됨
 
 HTTPS와 HTTP?
-
-
 
 AWS에서 PEM키 발급해줌
 

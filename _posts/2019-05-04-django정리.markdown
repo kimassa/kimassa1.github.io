@@ -1,3 +1,12 @@
 # django 정리
 
 ___
+
+- 현재의 requirements.txt내용 갱신하기
+pip freeze > requirements.txt
+
+- Virtual environment 내부 인스톨된 내용 전부지우기
+pip freeze | xargs pip uninstall -y
+
+- 8000 포트죽이기
+lsof -t -i tcp:8000 | xargs kill -9

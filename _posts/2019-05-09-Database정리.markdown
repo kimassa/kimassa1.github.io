@@ -1,0 +1,11 @@
+# Database
+
+___
+
+Mysql
+
+
+select * from [table];
+explain [table];
+show tables;
+use [database명];

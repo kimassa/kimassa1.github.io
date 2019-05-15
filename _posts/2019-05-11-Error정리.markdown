@@ -1,0 +1,12 @@
+# Error
+
+___
+
+- Django Circular model import issue
+
+solution:
+모델에 import하면 error가 발생하므로 import구문을 넣지않고
+ForeignKey 또는 ManytoManyField에 
+to='앱이름.클래스명'을 추가하여 해결
+
+ex. user_preference = models.ForeignKey(to='train.TrainInfo', on_delete=models.CASCADE)
