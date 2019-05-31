@@ -336,8 +336,8 @@ User.objects.all().order_by(Lower('username')).values_list('username', flat=True
 User.objects.annotate(
     lower_name=Lower('username')
 ).order_by('lower_name').values_list('username', flat=True)
-
 ```
+
 3. 여러 개의 필드를 기준으로 정렬하는 방법이 있나요?
 ```python
 from django.contrib.auth.models import User
