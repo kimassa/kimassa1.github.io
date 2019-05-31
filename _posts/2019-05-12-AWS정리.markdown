@@ -42,3 +42,12 @@ HTTPS와 HTTP?
 AWS에서 PEM키 발급해줌
 
 chmod 400을 실행해서 파일 권한을 바꿔줌
+
+
+
+
+- EC2 사용하기
+- AWS 사용하기
+- gunicorn
+- nohup
+- NGINX

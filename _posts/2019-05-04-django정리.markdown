@@ -2,7 +2,7 @@
 
 ___
 
-- 현재의 requirements.txt내용 갱신하기
+- 현재의 requirements.txt내용 업데이트하기
 pip freeze > requirements.txt
 
 - Virtual environment 내부 인스톨된 내용 전부지우기
@@ -10,3 +10,514 @@ pip freeze | xargs pip uninstall -y
 
 - 8000 포트죽이기
 lsof -t -i tcp:8000 | xargs kill -9
+
+
+```python
+str(queryset.query)
+```
+
+
+정보를 조회하고 필요한 항목을 선별하는 방법
+1. 장고 ORM이 실행하는 실제 SQL 질의문을 확인할 수 있나요?
+```python
+str(queryset.query)
+```
+2. OR 연산으로 일부 조건을 하나라도 만족하는 항목을 구하려면 어떻게 하나요?
+```python
+queryset_1 | queryset_2
+filter(Q(<condition_1>)|Q(<condition_2>))
+```
+3. AND 연산으로 여러 조건을 모두 만족하는 항목을 구하려면 어떻게 하나요?
+```python
+filter(<condition_1>, <condition_2>)
+queryset_1 & queryset_2
+filter(Q(<condition_1>) & Q(<condition_2>))
+```
+4. NOT 연산으로 조건을 부정하려면 어떻게 하나요?
+```python
+exclude(<condition>)
+filter(~Q(<condition>))
+```
+5. 동일한 모델 또는 서로 다른 모델에서 구한 쿼리셋들을 합할 수 있나요?
+SQL에서는 여러 개의 결과 집합을 합할 때 UNION 연산을 이용합니다.
+장고 ORM에서 union 메서드를 이용해 쿼리셋을 합할 수 있습니다. 
+합하려는 쿼리셋의 모델이 서로 다른 경우, 각 쿼리셋에 포함된 필드와 데이터 유형이 서로 맞아야 합니다.
+
+values_list 를 이용해 공통된 필드만 가져온 뒤 => union을 수행할 수 있습니다.
+```python
+Hero.objects.all().values_list(
+    "name", "gender"
+).union(
+Villain.objects.all().values_list(
+    "name", "gender"
+))
+```
+6. 필요한 열만 골라 조회하려면 어떻게 하나요?
+
+-쿼리셋의 values 메서드와 values_list 메서드
+-only 메서드
+
+7. 장고에서 서브쿼리 식을 사용할 수 있나요?
+
+
+
+8. 필드의 값을 서로 비교하여 항목을 선택할 수 있나요?
+
+
+
+9. FileField에 파일이 들어있지 않은 행은 어떻게 구할 수 있나요?
+
+```python
+no_files_objects = MyModel.objects.filter(
+    Q(file='')|Q(file=None)
+)
+```
+
+10. 두 모델을 결합(JOIN)하려면 어떻게 하나요?
+
+```python
+- select_related
+a1 = Article.objects.select_related('reporter')
+
+a2 = Article.objects.filter(reporter__username='John')
+```
+11. 두번째로 큰 항목은 어떻게 구하죠?
+```python
+user = User.objects.order_by('-last_login')[1]
+user = User.objects.order_by('-last_login')[2]
+```
+
+```SQL
+SELECT "auth_user"."id",
+       "auth_user"."password",
+       "auth_user"."last_login",
+       "auth_user"."is_superuser",
+       "auth_user"."username",
+       "auth_user"."first_name",
+       "auth_user"."last_name",
+       "auth_user"."email",
+       "auth_user"."is_staff",
+       "auth_user"."is_active",
+       "auth_user"."date_joined"
+FROM "auth_user"
+ORDER BY "auth_user"."last_login" DESC
+LIMIT 1
+OFFSET 2
+```
+[중요]
+12. 특정 열의 값이 동일한 항목은 어떻게 찾나요?
+```python
+duplicates = User.objects.values(
+    'first_name'
+    ).annotate(name_count=Count('first_name')).filter(name_count__gt=1)
+```
+
+위와 같이 중복 값을 구했으면, 이 값을 가진 항목을 아래와 같이 구할 수 있습니다.
+
+```python
+records = User.objects.filter(first_name__in=[item['first_name'] for item in duplicates])
+>>> print([item.id for item in records])
+```
+
+
+13. 쿼리셋에서 고유한 필드 값을 가진 항목은 어떻게 구하나요?
+
+```python
+distinct = User.objects.values('first_name').annotate(name_count=Count('first_name')).filter(name_count=1)
+records = User.objects.filter(first_name__in=[item['first_name'] for item in distinct])
+```
+
+- User.objects.distinct("first_name").all()
+
+14. Q 객체를 이용해 복잡한 질의를 수행하는 방법은 무엇인가요?
+
+OR
+- queryset = User.objects.filter(
+    Q(first_name__startswith='R') | Q(last_name__startswith='D')
+)
+
+AND
+- queryset = User.objects.filter(
+    Q(first_name__startswith='R') & Q(last_name__startswith='D')
+)
+
+NOT
+- queryset = User.objects.filter(
+    Q(first_name__startswith='R') & ~Q(last_name__startswith='Z')
+
+```SQL
+
+SELECT "auth_user"."id",
+       "auth_user"."password",
+       "auth_user"."last_login",
+       "auth_user"."is_superuser",
+       "auth_user"."username",
+       "auth_user"."first_name",
+       "auth_user"."last_name",
+       "auth_user"."email",
+       "auth_user"."is_staff",
+       "auth_user"."is_active",
+       "auth_user"."date_joined"
+FROM "auth_user"
+WHERE ("auth_user"."first_name"::text LIKE R%
+       AND NOT ("auth_user"."last_name"::text LIKE Z%))
+
+```
+
+
+15. 기록된 항목의 집계를 구할 수 있나요?
+
+```python
+from django.db.models import Avg, Max, Min, Sum, Count
+
+User.objects.all().aggregate(Avg('id'))
+User.objects.all().aggregate(Max('id'))
+User.objects.all().aggregate(Min('id'))
+User.objects.all().aggregate(Sum('id'))
+```
+16. 항목을 무작위로 뽑고 싶습니다. 효율적인 방법이 있을까요?
+```python
+
+# 방법1<방법3 283배빠름
+
+방법1
+Category.objects.order_by("?").first()
+
+방법2
+max_id = Category.objects.all().aggregate(max_id=Max("id"))['max_id'] # 표에서 ID의 최대값을 구하고
+pk = random.randint(1, max_id) # 1과 마지막 ID 사이의 난수를 하나 생성
+return Category.objects.get(pk=pk) # ID가 이 난수와 동일한 항목을 구하면 됩니다.
+
+방법3
+max_id = Category.objects.all().aggregate(max_id=Max("id"))['max_id']
+while True:
+    pk = random.randint(1, max_id)
+    category = Category.objects.filter(pk=pk).first()
+if category:
+    return category
+```
+
+17. 장고가 지원하지 않는 데이터베이스 함수를 사용할 수 있나요?
+
+
+
+항목을 생성·갱신·삭제하는 방법
+1. 여러 개의 행을 한번에 생성하는 방법이 있나요?
+
+- bulk_create()
+
+```python
+Category.objects.bulk_create(
+    [Category(name="God"),
+     Category(name="Demi God"),
+     Category(name="Mortal")]
+)
+```
+
+2. 기존에 저장된 행을 복사해 새로 저장하는 방법은 무엇인가요?
+
+- pk 필드 값이 None 으로 지정되어 있으면 데이터베이스에 새 행으로 저장됩니다.
+
+```python
+hero = Hero.objects.first()
+hero.pk = None
+hero.save()
+```
+3. 특정 모델의 항목이 하나만 생성되도록 강제하는 방법이 있나요?
+
+- 프로그램의 환경 설정 기록, 공유 자원에 대한 잠금 제어 등을 예로 들 수 있습니다.
+
+- save 메서드를 재정의하여 pk 필드를 이미 존재하는 값으로 지정하도록 강제합니다. 
+이로써 객체가 이미 존재할 때 create 메서드를 호출하는 경우 IntegrityError 예외가 발생.
+
+```python
+class Origin(models.Model):
+    name = models.CharField(max_length=100)
+
+    def save(self, *args, **kwargs):
+        if self.__class__.objects.count():
+            self.pk = self.__class__.objects.first().pk
+        super().save(*args, **kwargs)
+```
+4. 모델 인스턴스를 저장할 때, 다른 모델에 반정규화된 필드를 함께 갱신하는 방법이 있나요?
+
+- 반정규화 필드에 영향을 끼치는 모델을 여러분이 통제할 수 있다면 save 메서드를 재정의합니다.
+- 반정규화 필드에 영향을 끼치는 모델을 여러분이 통제할 수 없다면(그 영향이 라이브러리 등에서 이루어진다면) 시그널을 이용합니다.
+
+5. TRUNCATE 문을 수행하는 방법이 있나요?
+```python
+class Category(models.Model):
+    # ...
+
+    @classmethod
+    def truncate(cls):
+        with connection.cursor() as cursor:
+            cursor.execute('TRUNCATE TABLE "{0}" CASCADE'.format(cls._meta.db_table))
+```
+6. 모델 인스턴스가 생성·갱신될 때 발생하는 시그널에는 어떤 것이 있나요?
+
+- pre_init
+- post_init
+- pre_save
+- post_save
+- pre_delete
+- post_delete
+
+
+- 다른 사람(외부 라이브러리 등)이 여러분 앱의 save 메서드를 재정의·커스터마이즈하도록 허용하려면 직접 시그널을 발생시켜야 합니다.
+
+- 여러분이 통제할 수 없는 앱의 save 메서드가 호출될 때 원하는 코드가 실행되도록 하려면 post_save 시그널 또는 pre_save 시그널을 이용해야 합니다.
+
+- 여러분이 통제할 수 있는 앱의 저장 방식을 손 볼 때는 save 메서드를 재정의해야 합니다.
+
+
+7. 시간 정보를 다른 양식으로 변환하여 데이터베이스에 저장하려면 어떻게 해야 하나요?
+
+1번 방법
+```python
+
+user = User.objects.get(id=1)
+date_str = "2018-03-11"
+
+from django.utils.dateparse import parse_date
+temp_date = parse_date(date_str)
+a1 = Article(headline="String converted to date", pub_date=temp_date, reporter=user)
+a1.save()
+a1.pub_date
+datetime.date(2018, 3, 11)
+
+```
+
+2번 방법
+```python
+
+from datetime import datetime
+temp_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+a2 = Article(headline="String converted to date way 2", pub_date=temp_date, reporter=user)
+a2.save()
+a2.pub_date
+datetime.date(2018, 3, 11)
+
+```
+
+조회 결과를 정렬하는 방법
+1. 쿼리셋을 오름차순/내림차순으로 정렬할 수 있나요?
+```python
+
+# 오름차순
+User.objects.all().order_by('date_joined')
+
+# 내림차순
+User.objects.all().order_by('-date_joined')
+
+# 기준이 2개
+User.objects.all().order_by('date_joined', '-last_login')
+
+```
+```SQL
+SELECT "auth_user"."id",
+       -- More fields
+       "auth_user"."date_joined"
+FROM "auth_user"
+ORDER BY "auth_user"."date_joined" ASC,
+         "auth_user"."last_login" DESC
+```
+
+
+2. 대문자·소문자를 구별하지 않고 정렬하려면 어떻게 하나요?
+```python
+User.objects.all().order_by('username').values_list('username', flat=True)
+
+# 소문자 정렬
+from django.db.models.functions import Lower
+User.objects.all().order_by(Lower('username')).values_list('username', flat=True)
+
+# annotate 사용
+User.objects.annotate(
+    lower_name=Lower('username')
+).order_by('lower_name').values_list('username', flat=True)
+
+```
+3. 여러 개의 필드를 기준으로 정렬하는 방법이 있나요?
+```python
+from django.contrib.auth.models import User
+
+User.objects.all().order_by("is_active", "-last_login", "first_name")
+
+```
+4. 외래 키로 연결된 다른 표의 열을 기준으로 정렬할 수 있나요?
+
+- 이중 밑줄 기호(__)로 연결된 모델의 필드를 가리킬 수 있습니다.
+
+```python
+Hero.objects.all().order_by('category__name', 'name')
+```
+```SQL
+SELECT "entities_hero"."id",
+       "entities_hero"."name",
+       -- more fields
+FROM "entities_hero"
+INNER JOIN "entities_category" ON ("entities_hero"."category_id" = "entities_category"."id")
+ORDER BY "entities_category"."name" ASC,
+         "entities_hero"."name" ASC
+```
+
+5. 계산 필드를 기준으로 정렬할 수 있나요?
+
+- Category 항목들을 각 Category 항목에 속한 Hero 항목의 개수에 따라 정렬하고 싶다면, 다음과 같이 annotate 메서드로 계산 필드를 준비하여 기준으로 삼을 수 있습니다.
+
+```python
+Category.objects.annotate(hero_count=Count("hero")).order_by("-hero_count")
+```
+
+모델을 정의하는 방법
+1. 일대일 관계는 어떻게 나타내나요?
+```python
+```
+2. 일대다 관계는 어떻게 나타내나요?
+```python
+```
+3. 다대다 관계는 어떻게 나타내나요?
+```python
+```
+4. 모델에 자기 참조 외래 키를 정의할 수 있나요?
+```python
+class Employee(models.Model):
+    manager = models.ForeignKey('self', on_delete=models.CASCADE)
+
+# 또는
+
+class Employee(models.Model):
+    manager = models.ForeignKey("app.Employee", on_delete=models.CASCADE)
+```
+5. 기존 데이터베이스를 장고 모델로 옮길 수 있나요?
+```python
+
+python manage.py inspectdb
+
+python manage.py inspectdb > models.py
+
+```
+6. 데이터베이스 뷰에 대응하는 모델을 정의할 수 있나요?
+```python
+```
+7. 분류·댓글처럼 아무 모델이나 가리킬 수 있는 범용 모델을 정의할 수 있나요?
+```python
+```
+8. 모델에 연결된 표의 이름을 지정할 수 있나요?
+```python
+    class Meta:
+        db_table = "temp_user"
+```
+9. 모델 필드의 데이터베이스 열 이름을 지정할 수 있나요?
+```python
+class ColumnName(models.Model):
+    a = models.CharField(max_length=40,db_column='column1')
+    column2 = models.CharField(max_length=50)
+```
+10. null=True 와 blank=True 의 차이가 무엇인가요?
+
+- null 과 blank 는 둘 다 기본값이 False 입니다. 
+이 두 설정은 모두 필드(열) 수준에서 동작합니다. 즉, 필드(열)를 비워두는 것을 허용할 것인지를 설정합니다.
+
+- null=True 는 필드의 값이 NULL로 저장되는 것을 허용합니다. 결국 데이터베이스 열에 관한 설정입니다.
+
+- blank=True 는 필드가 폼(입력 양식)에서 빈 채로 저장되는 것을 허용합니다. (admin및 직접 정의한 폼에도 반영됩니다.)
+
+- null=True 와 blank=True 를 모두 지정하면 어떤 조건으로든 값을 비워둘 수 있음을 의미합니다.
+
+- 불리언 필드(BooleanField)에 NULL을 입력할 수 있도록 하려면 null=True 를 설정하는 것이 아니라, 널 불리언 필드(NullBooleanField)를 사용해야 합니다.
+
+
+
+11. 기본 키(PK)로 ID 대신 UUID를 사용할 수 있나요?
+
+양의 정수가 아니라 UUID를 기본 키로 사용하고 싶다면 장고 1.8 버전에서 추가된 UUIDField 를 사용하면 됩니다.
+
+
+```python
+import uuid
+
+id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+```
+12. 슬러그 필드를 사용할 수 있나요?
+
+- 슬러그(slug)는 URL의 구성요소로 웹사이트의 특정 페이지를 가리키는 사람이 읽기 쉬운 형식의 식별자입니다.
+
+- 장고에서는 슬러그 필드(SlugField)로 슬러그를 지원합니다. 
+
+- 다음 예에서 사용법을 확인하실 수 있습니다. 앞서 살펴보았던 Article 모델에 슬러그 필드를 추가해 가독성을 높여 보았습니다.
+
+
+
+```python
+
+from django.utils.text import slugify
+
+slug = models.SlugField(unique=True)
+
+def save(self, *args, **kwargs):
+    self.slug = slugify(self.headline)
+    super(Article, self).save(*args, **kwargs)
+
+```
+
+13. 장고 프로젝트 하나에서 여러 개의 데이터베이스를 사용할 수 있나요?
+```python
+
+DATABASE_ROUTERS = ['path.to.DemoRouter']
+DATABASE_APPS_MAPPING = {'user_data': 'users_db',
+                        'customer_data':'customers_db'}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'users_db': {
+        'NAME': 'user_data',
+        'ENGINE': 'django.db.backends.postgresql',
+        'USER': 'postgres_user',
+        'PASSWORD': 'password'
+    },
+    'customers_db': {
+        'NAME': 'customer_data',
+        'ENGINE': 'django.db.backends.mysql',
+        'USER': 'mysql_cust',
+        'PASSWORD': 'root'
+    }
+}
+```
+
+```python
+class User(models.Model):
+    username = models.Charfield(ax_length=100)
+    . . .
+        class Meta:
+        app_label = 'user_data'
+
+class Customer(models.Model):
+    name = models.TextField(max_length=100)
+    . . .
+        class Meta:
+        app_label = 'customer_data'
+
+
+# 마이그레이션 명령
+$ ./manage.py migrate --database=users_db
+
+```
+
+
+
+장고 ORM 코드를 테스트하는 방법
+1. 질의 횟수가 고정된 횟수만큼만 일어나는지 확인할 수 있을까요?
+```python
+```
+2. 데이터베이스를 재사용하여 테스트 실행 속도를 높일 수 있나요?
+```python
+```
+3. 모델 객체를 데이터베이스에서 다시 읽어들일 수 있나요?
+```python
+```

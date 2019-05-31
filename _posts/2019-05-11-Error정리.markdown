@@ -10,3 +10,7 @@ ForeignKey 또는 ManytoManyField에
 to='앱이름.클래스명'을 추가하여 해결
 
 ex. user_preference = models.ForeignKey(to='train.TrainInfo', on_delete=models.CASCADE)
+
+
+
+
