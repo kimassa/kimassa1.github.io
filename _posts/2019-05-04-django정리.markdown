@@ -176,8 +176,8 @@ User.objects.all().aggregate(Min('id'))
 User.objects.all().aggregate(Sum('id'))
 ```
 16. 항목을 무작위로 뽑고 싶습니다. 효율적인 방법이 있을까요?
-```python
 
+```python
 # 방법1<방법3 283배빠름
 
 방법1
