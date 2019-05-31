@@ -325,6 +325,7 @@ ORDER BY "auth_user"."date_joined" ASC,
 
 
 2. 대문자·소문자를 구별하지 않고 정렬하려면 어떻게 하나요?
+
 ```python
 User.objects.all().order_by('username').values_list('username', flat=True)
 
