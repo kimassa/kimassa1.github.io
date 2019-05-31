@@ -575,7 +575,7 @@ e.entrydetail = ed
 ```
 관련객체에 대한 쿼리
 
-```python
+```python 
 Entry.objects.filter(blog=b) # Query using object instance
 Entry.objects.filter(blog=b.id) # Query using id from instance
 Entry.objects.filter(blog=5) # Query using id directly 
