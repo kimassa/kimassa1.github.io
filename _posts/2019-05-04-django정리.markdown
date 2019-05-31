@@ -139,25 +139,27 @@ records = User.objects.filter(first_name__in=[item['first_name'] for item in dup
 ```python
 distinct = User.objects.values('first_name').annotate(name_count=Count('first_name')).filter(name_count=1)
 records = User.objects.filter(first_name__in=[item['first_name'] for item in distinct])
-```
 
 - User.objects.distinct("first_name").all()
+```
 
 14. Q 객체를 이용해 복잡한 질의를 수행하는 방법은 무엇인가요?
 
-OR
+```python
+# OR
 - queryset = User.objects.filter(
     Q(first_name__startswith='R') | Q(last_name__startswith='D')
 )
 
-AND
+# AND
 - queryset = User.objects.filter(
     Q(first_name__startswith='R') & Q(last_name__startswith='D')
 )
 
-NOT
+# NOT
 - queryset = User.objects.filter(
     Q(first_name__startswith='R') & ~Q(last_name__startswith='Z')
+```
 
 ```SQL
 
